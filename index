@@ -1,0 +1,42 @@
+Enter<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Stockfish Online Analysis</title>
+</head>
+<body>
+  <h2>تحليل الشطرنج باستخدام Stockfish</h2>
+
+  <textarea id="fen" rows="3" cols="60">
+r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3
+  </textarea>
+  <br><br>
+
+  <button onclick="analyze()">حلل الوضعية</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish/stockfish.js");
+
+    function analyze() {
+      const fen = document.getElementById("fen").value;
+      const output = document.getElementById("output");
+
+      output.textContent = "جاري التحليل...\n";
+
+      stockfish.postMessage("position fen " + fen);
+      stockfish.postMessage("go depth 15");
+
+      stockfish.onmessage = function(event) {
+        const line = event.data;
+        if (line.includes("bestmove")) {
+          output.textContent += "\n" + line;
+        } else if (line.includes("info depth")) {
+          output.textContent = line;
+        }
+      };
+    }
+  </script>
+</body>
+</html>
