@@ -3,95 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شطرنج احترافي - العب من الناحيتين</title>
+    <title>شطرنج احترافي - محرك Stockfish</title>
     
-    <!-- مكتبة Tailwind CSS للتصميم الاحترافي -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- مكتبة شكل اللوحة -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        /* تظبيط ظل اللوحة عشان تبان بارزة */
-        .board-shadow {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .board-shadow { box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+        /* أنيميشن خفيف لزرار التحميل */
+        .loading { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body class="bg-gray-800 text-gray-200 min-h-screen p-6 md:p-12">
 
-    <!-- الحاوية الرئيسية -->
     <div class="max-w-6xl mx-auto">
         
-        <!-- الهيدر -->
         <div class="mb-8 border-b border-gray-600 pb-4">
-            <h1 class="text-3xl font-bold text-gray-50 mb-2">شطرنج احترافي</h1>
-            <p class="text-gray-400">لوحة لعب من الناحيتين بتصميم متقدم، بدون الحاجة لإنترنت للعب (أوفلاين).</p>
+            <h1 class="text-3xl font-bold text-gray-50 mb-2">شطرنج احترافي + محرك ذكي</h1>
+            <p class="text-gray-400">العب من الناحيتين، أو خلي الكمبيوتر يحسبلك أحسن حركة باستخدام Stockfish 16 (مجانًا وبدون تسجيل).</p>
         </div>
 
-        <!-- تقسيمة الشاشة (اللوحة يمين، والتحكم شمال) -->
         <div class="flex flex-col lg:flex-row gap-10">
             
-            <!-- قسم اللوحة -->
+            <!-- اللوحة -->
             <div class="w-full lg:w-2/3 flex justify-center lg:justify-start">
-                <div id="myBoard" class="w-full max-w-[500px] board-shadow border-4 border-gray-700 rounded-sm"></div>
+                <div id="myBoard" class="w-full max-w-[500px] board-shadow border-4 border-gray-700 rounded-sm bg-gray-300"></div>
             </div>
 
-            <!-- قسم شريط التحكم (الـ Sidebar) -->
+            <!-- لوحة التحكم الاحترافية -->
             <div class="w-full lg:w-1/3 flex flex-col gap-6">
                 
-                <!-- صندوق الحالة -->
                 <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
                     <h2 class="text-xl font-bold text-white mb-4 border-b border-gray-500 pb-2">حالة اللعبة</h2>
-                    <div id="status" class="text-lg font-semibold text-yellow-400">جاري التحميل...</div>
+                    <div id="status" class="text-lg font-semibold text-blue-300">الدور على: الأبيض</div>
                 </div>
 
-                <!-- صندوق التحكم -->
                 <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
-                    <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-500 pb-2">أدوات التحكم</h2>
-                    <div class="flex gap-3">
-                        <button id="flipBtn" class="flex-1 bg-gradient-to-b from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500 text-white py-2 px-4 rounded border border-gray-400 transition font-medium">لف اللوحة</button>
-                        <button id="resetBtn" class="flex-1 bg-gradient-to-b from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-2 px-4 rounded border border-red-500 transition font-medium">لعبة جديدة</button>
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-500 pb-2">الكمبيوتر (المحرك)</h2>
+                    
+                    <!-- الزرار السحري اللي بيجيب أحسن حركة -->
+                    <button id="calculateBtn" class="w-full bg-gradient-to-b from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white py-3 px-4 rounded border border-green-500 transition font-bold text-lg mb-4 shadow-lg">
+                        🎯 إحسب أفضل حركة (Stockfish)
+                    </button>
+
+                    <div class="flex gap-2">
+                        <button id="flipBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 px-2 rounded border border-gray-500 transition text-sm">لف اللوحة</button>
+                        <button id="resetBtn" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-2 px-2 rounded border border-red-500 transition text-sm">لعبة جديدة</button>
+                        <button id="undoBtn" class="flex-1 bg-yellow-600 hover:bg-yellow-500 text-white py-2 px-2 rounded border border-yellow-500 transition text-sm">تراجع</button>
                     </div>
                 </div>
 
-                <!-- صندوق الـ FEN -->
                 <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
-                    <div class="flex justify-between items-center mb-2 border-b border-gray-500 pb-2">
-                        <h2 class="text-lg font-bold text-white">كود الرصة (FEN)</h2>
-                    </div>
-                    <input type="text" id="fenOutput" readonly class="w-full bg-gray-900 text-gray-300 border border-gray-600 rounded p-2 text-sm text-left focus:outline-none focus:border-blue-500" dir="ltr">
-                    <p class="text-xs text-gray-400 mt-2">الكود ده بيوصف مكان القطع حالياً على اللوحة.</p>
+                    <h2 class="text-sm font-bold text-gray-300 mb-2">كود الرصة (FEN)</h2>
+                    <input type="text" id="fenOutput" readonly class="w-full bg-gray-900 text-gray-400 border border-gray-600 rounded p-2 text-xs text-left focus:outline-none" dir="ltr">
                 </div>
 
             </div>
         </div>
     </div>
 
-    <!-- استدعاء المكتبات الأساسية -->
+    <!-- المكتبات -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-    <!-- برمجة اللعبة والواجهة -->
     <script>
         var board = null;
         var game = new Chess();
         var $status = $('#status');
         var $fenOutput = $('#fenOutput');
+        var $calcBtn = $('#calculateBtn');
 
         function onDragStart (source, piece, position, orientation) {
-            // منع اللعب لو اللعبة خلصت
             if (game.game_over()) return false;
-
-            // منع تحريك قطع الخصم
-            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-                return false;
-            }
+            // شيلنا شرط منع تحريك قطع الخصم عشان تقدر تلعب براحتك لوحدك أو مع صاحبك
         }
 
         function onDrop (source, target) {
@@ -115,11 +106,11 @@
 
             if (game.in_checkmate()) {
                 statusHTML = 'كش مات! الفائز: ' + (moveColor === 'الأبيض' ? 'الأسود' : 'الأبيض');
-                $status.removeClass('text-yellow-400 text-blue-400').addClass('text-red-400');
+                $status.removeClass('text-yellow-400 text-blue-300').addClass('text-red-400');
             } 
             else if (game.in_draw()) {
                 statusHTML = 'تعادل!';
-                $status.removeClass('text-yellow-400 text-blue-400 text-red-400').addClass('text-gray-300');
+                $status.removeClass('text-yellow-400 text-blue-300 text-red-400').addClass('text-gray-300');
             } 
             else {
                 statusHTML = 'الدور على: ' + moveColor;
@@ -136,14 +127,12 @@
             }
 
             $status.html(statusHTML);
-            // تحديث مربع الـ FEN
             $fenOutput.val(game.fen());
         }
 
         var config = {
             draggable: true,
             position: 'start',
-            // رابط الصور اتعدل هنا للسيرفر الرسمي
             pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
             onDragStart: onDragStart,
             onDrop: onDrop,
@@ -153,16 +142,63 @@
         board = Chessboard('myBoard', config);
         updateStatus();
 
-        // تفعيل زرار لف اللوحة
-        $('#flipBtn').on('click', function() {
-            board.flip();
-        });
+        // زرار لف اللوحة
+        $('#flipBtn').on('click', function() { board.flip(); });
 
-        // تفعيل زرار إعادة اللعبة
+        // زرار ريستارت
         $('#resetBtn').on('click', function() {
             game.reset();
             board.start();
             updateStatus();
+        });
+
+        // زرار التراجع
+        $('#undoBtn').on('click', function() {
+            game.undo();
+            board.position(game.fen());
+            updateStatus();
+        });
+
+        // الدالة السحرية للاتصال بالذكاء الاصطناعي (Stockfish API)
+        $calcBtn.on('click', function() {
+            if (game.game_over()) {
+                alert('اللعبة خلصت يا بطل!');
+                return;
+            }
+
+            // نغير شكل الزرار عشان يبان إنه بيفكر
+            var originalText = $calcBtn.html();
+            $calcBtn.html('🤔 جاري التفكير وطلب المساعدة...').addClass('loading').prop('disabled', true);
+
+            var currentFen = game.fen();
+            var apiUrl = 'https://stockfish.online/api/s/v2.php?fen=' + encodeURIComponent(currentFen) + '&depth=14';
+
+            // طلب الحركة من السيرفر المجاني
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                success: function(response) {
+                    if(response.success) {
+                        // السيرفر بيرجع الحركة بالشكل ده: "bestmove e2e4 ponder e7e5"
+                        // إحنا بناخد الجزء التاني (e2e4)
+                        var bestMoveString = response.bestmove.split(' ')[1]; 
+                        
+                        // بنخلي مكتبة الشطرنج تلعب الحركة دي
+                        game.move(bestMoveString, { sloppy: true });
+                        board.position(game.fen());
+                        updateStatus();
+                    } else {
+                        alert('حصلت مشكلة في السيرفر، جرب تاني.');
+                    }
+                },
+                error: function() {
+                    alert('مش قادر أوصل للسيرفر، اتأكد من النت عندك.');
+                },
+                complete: function() {
+                    // نرجع الزرار لأصله
+                    $calcBtn.html(originalText).removeClass('loading').prop('disabled', false);
+                }
+            });
         });
     </script>
 </body>
