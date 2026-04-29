@@ -1,42 +1,168 @@
-Enter<!DOCTYPE html>
-<html lang="ar">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
 <head>
-  <meta charset="UTF-8">
-  <title>Stockfish Online Analysis</title>
-</head>
-<body>
-  <h2>تحليل الشطرنج باستخدام Stockfish</h2>
-
-  <textarea id="fen" rows="3" cols="60">
-r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3
-  </textarea>
-  <br><br>
-
-  <button onclick="analyze()">حلل الوضعية</button>
-
-  <pre id="output"></pre>
-
-  <script>
-    const stockfish = new Worker("https://cdn.jsdelivr.net/npm/stockfish/stockfish.js");
-
-    function analyze() {
-      const fen = document.getElementById("fen").value;
-      const output = document.getElementById("output");
-
-      output.textContent = "جاري التحليل...\n";
-
-      stockfish.postMessage("position fen " + fen);
-      stockfish.postMessage("go depth 15");
-
-      stockfish.onmessage = function(event) {
-        const line = event.data;
-        if (line.includes("bestmove")) {
-          output.textContent += "\n" + line;
-        } else if (line.includes("info depth")) {
-          output.textContent = line;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شطرنج احترافي - العب من الناحيتين</title>
+    
+    <!-- مكتبة Tailwind CSS للتصميم الاحترافي (زي الموقع اللي بعته) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- مكتبة شكل اللوحة -->
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-      };
-    }
-  </script>
+        /* تظبيط ظل اللوحة عشان تبان بارزة */
+        .board-shadow {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+    </style>
+</head>
+<body class="bg-gray-800 text-gray-200 min-h-screen p-6 md:p-12">
+
+    <!-- الحاوية الرئيسية -->
+    <div class="max-w-6xl mx-auto">
+        
+        <!-- الهيدر -->
+        <div class="mb-8 border-b border-gray-600 pb-4">
+            <h1 class="text-3xl font-bold text-gray-50 mb-2">شطرنج احترافي</h1>
+            <p class="text-gray-400">لوحة لعب من الناحيتين بتصميم متقدم، بدون الحاجة لإنترنت للعب (أوفلاين).</p>
+        </div>
+
+        <!-- تقسيمة الشاشة (اللوحة يمين، والتحكم شمال) -->
+        <div class="flex flex-col lg:flex-row gap-10">
+            
+            <!-- قسم اللوحة -->
+            <div class="w-full lg:w-2/3 flex justify-center lg:justify-start">
+                <div id="myBoard" class="w-full max-w-[500px] board-shadow border-4 border-gray-700 rounded-sm"></div>
+            </div>
+
+            <!-- قسم شريط التحكم (الـ Sidebar) -->
+            <div class="w-full lg:w-1/3 flex flex-col gap-6">
+                
+                <!-- صندوق الحالة -->
+                <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
+                    <h2 class="text-xl font-bold text-white mb-4 border-b border-gray-500 pb-2">حالة اللعبة</h2>
+                    <div id="status" class="text-lg font-semibold text-yellow-400">جاري التحميل...</div>
+                </div>
+
+                <!-- صندوق التحكم -->
+                <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-500 pb-2">أدوات التحكم</h2>
+                    <div class="flex gap-3">
+                        <button id="flipBtn" class="flex-1 bg-gradient-to-b from-gray-500 to-gray-600 hover:from-gray-400 hover:to-gray-500 text-white py-2 px-4 rounded border border-gray-400 transition font-medium">لف اللوحة</button>
+                        <button id="resetBtn" class="flex-1 bg-gradient-to-b from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-2 px-4 rounded border border-red-500 transition font-medium">لعبة جديدة</button>
+                    </div>
+                </div>
+
+                <!-- صندوق الـ FEN -->
+                <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
+                    <div class="flex justify-between items-center mb-2 border-b border-gray-500 pb-2">
+                        <h2 class="text-lg font-bold text-white">كود الرصة (FEN)</h2>
+                    </div>
+                    <input type="text" id="fenOutput" readonly class="w-full bg-gray-900 text-gray-300 border border-gray-600 rounded p-2 text-sm text-left focus:outline-none focus:border-blue-500" dir="ltr">
+                    <p class="text-xs text-gray-400 mt-2">الكود ده بيوصف مكان القطع حالياً على اللوحة.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- استدعاء المكتبات الأساسية -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <!-- برمجة اللعبة والواجهة -->
+    <script>
+        var board = null;
+        var game = new Chess();
+        var $status = $('#status');
+        var $fenOutput = $('#fenOutput');
+
+        function onDragStart (source, piece, position, orientation) {
+            // منع اللعب لو اللعبة خلصت
+            if (game.game_over()) return false;
+
+            // منع تحريك قطع الخصم
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function onDrop (source, target) {
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+            updateStatus();
+        }
+
+        function onSnapEnd () {
+            board.position(game.fen());
+        }
+
+        function updateStatus () {
+            var statusHTML = '';
+            var moveColor = (game.turn() === 'w') ? 'الأبيض' : 'الأسود';
+
+            if (game.in_checkmate()) {
+                statusHTML = 'كش مات! الفائز: ' + (moveColor === 'الأبيض' ? 'الأسود' : 'الأبيض');
+                $status.removeClass('text-yellow-400 text-blue-400').addClass('text-red-400');
+            } 
+            else if (game.in_draw()) {
+                statusHTML = 'تعادل!';
+                $status.removeClass('text-yellow-400 text-blue-400 text-red-400').addClass('text-gray-300');
+            } 
+            else {
+                statusHTML = 'الدور على: ' + moveColor;
+                $status.removeClass('text-red-400 text-gray-300');
+                if(moveColor === 'الأبيض'){
+                    $status.removeClass('text-yellow-400').addClass('text-blue-300');
+                } else {
+                    $status.removeClass('text-blue-300').addClass('text-yellow-400');
+                }
+                
+                if (game.in_check()) {
+                    statusHTML += ' <span class="text-red-400 text-sm ml-2">(كش ملك!)</span>';
+                }
+            }
+
+            $status.html(statusHTML);
+            // تحديث مربع الـ FEN
+            $fenOutput.val(game.fen());
+        }
+
+        var config = {
+            draggable: true,
+            position: 'start',
+            pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd
+        };
+        
+        board = Chessboard('myBoard', config);
+        updateStatus();
+
+        // تفعيل زرار لف اللوحة
+        $('#flipBtn').on('click', function() {
+            board.flip();
+        });
+
+        // تفعيل زرار إعادة اللعبة
+        $('#resetBtn').on('click', function() {
+            game.reset();
+            board.start();
+            updateStatus();
+        });
+    </script>
 </body>
 </html>
