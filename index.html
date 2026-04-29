@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>شطرنج احترافي - العب من الناحيتين</title>
     
-    <!-- مكتبة Tailwind CSS للتصميم الاحترافي (زي الموقع اللي بعته) -->
+    <!-- مكتبة Tailwind CSS للتصميم الاحترافي -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- مكتبة شكل اللوحة -->
@@ -143,7 +143,8 @@
         var config = {
             draggable: true,
             position: 'start',
-            pieceTheme: 'https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/img/chesspieces/wikipedia/{piece}.png',
+            // رابط الصور اتعدل هنا للسيرفر الرسمي
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
             onDragStart: onDragStart,
             onDrop: onDrop,
             onSnapEnd: onSnapEnd
