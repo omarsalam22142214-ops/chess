@@ -1,426 +1,352 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شطرنج احترافي + وضع الرص الحر + Stockfish محلي</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
-    
-    <!-- Chessboard.js CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
-    
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
-        .board-shadow { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .loading { animation: pulse 1.5s infinite; }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        /* التحديد باللون الأصفر للحركة الأخيرة */
-        .highlight-move {
-            box-shadow: inset 0 0 0 100px rgba(255, 255, 51, 0.5) !important;
-        }
-
-        /* تنسيق القطع الاحتياطية */
-        .spare-pieces-7492f {
-            margin: 10px 0;
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شطرنج احترافي - وضع الرص الحر</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .board-shadow { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .loading { animation: pulse 1.5s infinite; }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .spare-pieces-7492f { margin: 15px 0; display: flex; justify-content: center; gap: 10px; }
+        
+        /* التحديد باللون الأصفر */
+        .highlight-move {
+            box-shadow: inset 0 0 0 100px rgba(255, 255, 51, 0.5) !important;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 min-h-screen p-6 md:p-12">
+<body class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-200 min-h-screen p-6 md:p-12">
 
-    <div class="max-w-6xl mx-auto">
-        
-        <!-- الهيدر -->
-        <div class="mb-8 border-b border-gray-300 dark:border-gray-700 pb-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-4xl font-extrabold text-gray-900 dark:text-gray-50 mb-2">شطرنج احترافي 🔥</h1>
-                <p class="text-gray-600 dark:text-gray-400">وضع الرص الحر + Stockfish قوي يعمل محلياً في متصفحك!</p>
-            </div>
-            <button id="themeToggleBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-5 rounded-lg shadow-lg transition duration-150 ease-in-out">
-                ☀️ وضع النهار
-            </button>
-        </div>
+    <div class="max-w-6xl mx-auto">
+        
+        <div class="mb-8 border-b border-gray-300 dark:border-gray-600 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-2">شطرنج احترافي + وضع حر</h1>
+                <p class="text-gray-600 dark:text-gray-400">إسحب القطع من برة، إرمي القطع لبرة، وارجع في كلامك براحتك!</p>
+            </div>
+            <button id="themeToggleBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded shadow-lg transition">
+                ☀️ وضع النهار
+            </button>
+        </div>
 
-        <div class="flex flex-col lg:flex-row-reverse gap-10">
-            
-            <!-- رقعة الشطرنج على اليمين (RTL) -->
-            <div class="w-full lg:w-2/3 flex justify-center lg:justify-start">
-                <div class="w-full max-w-[550px]">
-                    <div id="myBoard" class="w-full board-shadow border-4 border-gray-400 dark:border-gray-700 rounded-lg overflow-hidden"></div>
-                </div>
-            </div>
+        <div class="flex flex-col lg:flex-row gap-10">
+            
+            <div class="w-full lg:w-2/3 flex justify-center lg:justify-start">
+                <div class="w-full max-w-[500px]">
+                    <div id="myBoard" class="w-full board-shadow border-4 border-gray-400 dark:border-gray-700 rounded-sm"></div>
+                </div>
+            </div>
 
-            <!-- لوحة التحكم على اليسار -->
-            <div class="w-full lg:w-1/3 flex flex-col gap-6">
-                
-                <!-- حالة اللعبة -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-300 dark:border-gray-700 shadow-xl">
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-5 border-b border-gray-200 dark:border-gray-600 pb-3">حالة اللعبة</h2>
-                    <div id="status" class="text-xl font-semibold text-blue-600 dark:text-blue-300">الدور على: الأبيض</div>
-                </div>
+            <div class="w-full lg:w-1/3 flex flex-col gap-5">
+                
+                <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">حالة اللعبة</h2>
+                    <div id="status" class="text-lg font-semibold text-blue-600 dark:text-blue-300">الدور على: الأبيض</div>
+                </div>
 
-                <!-- الدور على مين؟ (اختيار يدوي لوضع الرص) -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-300 dark:border-gray-700 shadow-xl overflow-hidden">
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-5 border-b border-gray-200 dark:border-gray-600 pb-3">تغيير الدور (يدوياً)</h2>
-                    <div class="flex flex-col gap-4">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="turn" value="w" id="turnWhite" class="w-6 h-6 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" checked>
-                            <span class="mr-3.5 text-lg text-gray-700 dark:text-gray-200 font-medium">الأبيض (White)</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="turn" value="b" id="turnBlack" class="w-6 h-6 text-yellow-500 bg-gray-100 border-gray-300 focus:ring-yellow-500">
-                            <span class="mr-3.5 text-lg text-gray-700 dark:text-gray-200 font-medium">الأسود (Black)</span>
-                        </label>
-                    </div>
-                </div>
+                <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">الدور على مين؟</h2>
+                    <div class="flex flex-col gap-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="turn" value="w" id="turnWhite" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" checked>
+                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">الأبيض (White)</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="turn" value="b" id="turnBlack" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500">
+                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">الأسود (Black)</span>
+                        </label>
+                    </div>
+                </div>
 
-                <!-- أزرار التحكم -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-300 dark:border-gray-700 shadow-xl">
-                    <button id="calculateBtn" class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-4 px-5 rounded-xl transition font-bold text-xl mb-5 shadow-lg flex items-center justify-center gap-3">
-                        <span id="calcIcon">🎯</span>
-                        <span id="calcText">إحسب أفضل حركة</span>
-                    </button>
+                <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
+                    <button id="calculateBtn" class="w-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 hover:opacity-90 text-white py-3 px-4 rounded border border-green-600 dark:border-green-500 transition font-bold text-lg mb-4 shadow-md">
+                        🎯 إحسب أفضل حركة
+                    </button>
 
-                    <div class="grid grid-cols-2 gap-3 mb-3">
-                        <button id="undoBtn" class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-2.5 px-3 rounded-lg shadow transition">↩️ تراجع خطوة</button>
-                        <button id="flipBtn" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2.5 px-3 rounded-lg shadow transition">🔄 لف اللوحة</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="resetBtn" class="bg-red-500 hover:bg-red-400 text-white font-bold py-2.5 px-3 rounded-lg shadow transition">🗑️ لعبة جديدة</button>
-                        <button id="clearBtn" class="bg-purple-500 hover:bg-purple-400 text-white font-bold py-2.5 px-3 rounded-lg shadow transition">🧹 إمسح اللوحة</button>
-                    </div>
-                </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button id="undoBtn" class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-2 px-2 rounded border border-yellow-600 shadow-sm transition">↩️ تراجع خطوة</button>
+                        <button id="flipBtn" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-2 rounded border border-gray-600 shadow-sm transition">🔄 لف اللوحة</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="resetBtn" class="bg-red-500 hover:bg-red-400 text-white font-bold py-2 px-2 rounded border border-red-600 shadow-sm transition">🗑️ لعبة جديدة</button>
+                        <button id="clearBtn" class="bg-purple-500 hover:bg-purple-400 text-white font-bold py-2 px-2 rounded border border-purple-600 shadow-sm transition">🧹 إمسح اللوحة</button>
+                    </div>
+                </div>
 
-                <!-- كود الرصة (FEN) -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-300 dark:border-gray-700 shadow-xl">
-                    <h2 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">كود الرصة الحالية (FEN)</h2>
-                    <input type="text" id="fenOutput" readonly class="w-full bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700 rounded-lg p-3 text-xs text-left focus:outline-none" dir="ltr">
-                </div>
+                <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
+                    <h2 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">كود الرصة (FEN)</h2>
+                    <input type="text" id="fenOutput" readonly class="w-full bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded p-2 text-xs text-left focus:outline-none" dir="ltr">
+                </div>
 
-            </div>
-        </div>
-    </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- المكتبات الأساسية -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
-    
-    <!-- Stockfish.wasm (تحميل محلي) -->
-    <!-- سنستخدم نسخة مستقرة من cdnjs -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 
-    <script>
-        var board = null;
-        var game = new Chess();
-        var $status = $('#status');
-        var $fenOutput = $('#fenOutput');
-        var $calcBtn = $('#calculateBtn');
-        var $calcText = $('#calcText');
-        var $calcIcon = $('#calcIcon');
-        
-        var fenHistory = [];
-        var engine = null;
-        var depth = 18; // عمق تفكير عالي وقوي جداً
+    <script>
+        var board = null;
+        var game = new Chess();
+        var $status = $('#status');
+        var $fenOutput = $('#fenOutput');
+        var $calcBtn = $('#calculateBtn');
+        
+        var fenHistory = [];
 
-        // --- تهيئة محرك Stockfish محلياً ---
-        try {
-            // تحميل المحرك من نسخة stockfish.js التي تم تحميلها في الـ HTML
-            engine = typeof Stockfish === "function" ? Stockfish() : null;
-            if (!engine) {
-                console.error("لم يتم تحميل Stockfish بشكل صحيح.");
-                $calcBtn.prop('disabled', true).html('❌ Stockfish مش شغال!');
-            } else {
-                console.log("Stockfish جاهز ويعمل محلياً.");
-            }
-        } catch (e) {
-            console.error("خطأ في تهيئة Stockfish:", e);
-            $calcBtn.prop('disabled', true).html('❌ خطأ في المحرك!');
-        }
-        // ------------------------------------
+        // --- المؤثرات الصوتية ---
+        var moveSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3');
+        var captureSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3');
+        var checkSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/check.mp3');
+        var gameEndSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3');
 
-        // --- المؤثرات الصوتية من chess.com ---
-        var moveSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3');
-        var captureSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3');
-        var checkSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/check.mp3');
-        var gameEndSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/game-end.mp3');
+        function playMoveSound(isCapture) {
+            if (game.game_over()) {
+                gameEndSound.play().catch(function(){});
+            } else if (game.in_check()) {
+                checkSound.play().catch(function(){});
+            } else if (isCapture) {
+                captureSound.play().catch(function(){});
+            } else {
+                moveSound.play().catch(function(){});
+            }
+        }
+        // ------------------------
 
-        function playMoveSound(isCapture) {
-            if (game.game_over()) {
-                gameEndSound.play().catch(function(){});
-            } else if (game.in_check()) {
-                checkSound.play().catch(function(){});
-            } else if (isCapture) {
-                captureSound.play().catch(function(){});
-            } else {
-                moveSound.play().catch(function(){});
-            }
-        }
-        // ------------------------
+        // --- دوال الهايلايت (التعديل الجذري عشان ميعلقش) ---
+        function removeHighlights() {
+            // بنمسح التحديد باستخدام الكلاس نفسه عشان نضمن إنه يتمسح تماماً
+            $('.highlight-move').removeClass('highlight-move');
+        }
 
-        // --- دوال الهايلايت (التعديل لضمان الدقة) ---
-        function removeHighlights() {
-            $('#myBoard .square-55d63').removeClass('highlight-move');
-        }
+        function highlightMove(source, target) {
+            removeHighlights();
+            if (source && source !== 'spare' && source !== 'offboard') {
+                $('#myBoard .square-' + source).addClass('highlight-move');
+            }
+            if (target && target !== 'offboard') {
+                $('#myBoard .square-' + target).addClass('highlight-move');
+            }
+        }
+        // ------------------------
 
-        function highlightMove(source, target) {
-            removeHighlights();
-            if (source && source !== 'spare' && source !== 'offboard') {
-                $('#myBoard .square-' + source).addClass('highlight-move');
-            }
-            if (target && target !== 'offboard') {
-                $('#myBoard .square-' + target).addClass('highlight-move');
-            }
-        }
-        // ------------------------
+        function onDragStart (source, piece, position, orientation) {}
 
-        // منع السحب قبل تحميل الرقعة
-        function onDragStart (source, piece, position, orientation) {
-            if (game.game_over()) return false;
-        }
+        function onDrop (source, target, piece, newPos, oldPos, orientation) {
+            if (source === target) return 'snapback';
 
-        // التعامل مع وضع الرص الحر
-        function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            if (source === target) return 'snapback';
+            fenHistory.push(game.fen());
 
-            // تسجيل FEN قبل الحركة للتراجع
-            fenHistory.push(game.fen());
+            var isCapture = false;
 
-            var isCapture = false;
+            if (source === 'spare') {
+                isCapture = game.get(target) !== null;
+                game.put({ type: piece[1].toLowerCase(), color: piece[0] }, target);
+            } 
+            else if (target === 'offboard') {
+                game.remove(source);
+            } 
+            else {
+                // بنحاول نعمل الحركة قانونياً الأول عشان نعرف لو فيها أكل (حتى لو أكل بالتجاوز)
+                var tempMove = game.move({ from: source, to: target, promotion: 'q' });
+                
+                if (tempMove !== null) {
+                    isCapture = tempMove.captured != null;
+                    game.undo(); // نرجعها عشان نطبقها تحت تاني أو نطبقها بالعافية
+                } else {
+                    isCapture = game.get(target) !== null;
+                }
 
-            // 1. وضع قطعة احتياطية على الرقعة
-            if (source === 'spare') {
-                isCapture = game.get(target) !== null;
-                game.put({ type: piece[1].toLowerCase(), color: piece[0] }, target);
-            } 
-            // 2. رمي قطعة خارج الرقعة لمسحها
-            else if (target === 'offboard') {
-                game.remove(source);
-            } 
-            // 3. حركة قطعة داخل الرقعة
-            else {
-                // محاولة عمل حركة قانونية أولاً
-                var move = game.move({ from: source, to: target, promotion: 'q' });
-                
-                if (move === null) {
-                    // إذا لم تكن قانونية، نستخدم دالة put لجعلها وضعاً حراً
-                    isCapture = game.get(target) !== null;
-                    game.remove(source);
-                    game.put({ type: piece[1].toLowerCase(), color: piece[0] }, target);
-                } else {
-                    isCapture = move.captured != null;
-                }
-            }
+                // تنفيذ الحركة
+                var move = game.move({ from: source, to: target, promotion: 'q' });
+                if (move === null) {
+                    game.remove(source);
+                    game.put({ type: piece[1].toLowerCase(), color: piece[0] }, target);
+                }
+            }
 
-            updateStatus();
-            highlightMove(source, target);
-            playMoveSound(isCapture);
-        }
+            updateStatus();
+            highlightMove(source, target);
+            playMoveSound(isCapture);
+        }
 
-        // تحديث اللوحة بعد السحب
-        function onSnapEnd () {
-            board.position(game.fen());
-        }
+        function onSnapEnd () {
+            board.position(game.fen());
+        }
 
-        // تحديث حالة اللعبة والنصوص
-        function updateStatus () {
-            var statusHTML = '';
-            var moveColor = (game.turn() === 'w') ? 'الأبيض' : 'الأسود';
+        function updateStatus () {
+            var statusHTML = '';
+            var moveColor = (game.turn() === 'w') ? 'الأبيض' : 'الأسود';
 
-            if (game.in_checkmate()) {
-                statusHTML = 'كش مات! الفائز: ' + (moveColor === 'الأبيض' ? 'الأسود' : 'الأبيض');
-                $status.removeClass('text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-red-500');
-            } 
-            else if (game.in_draw()) {
-                statusHTML = 'وضع تعادل!';
-                $status.removeClass('text-red-500 text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-gray-500');
-            } 
-            else {
-                statusHTML = 'الدور على: ' + moveColor;
-                $status.removeClass('text-red-500 text-gray-500');
-                if(moveColor === 'الأبيض'){
-                    $status.removeClass('text-yellow-600 dark:text-yellow-400').addClass('text-blue-600 dark:text-blue-300');
-                } else {
-                    $status.removeClass('text-blue-600 dark:text-blue-300').addClass('text-yellow-600 dark:text-yellow-400');
-                }
-                
-                if (game.in_check()) {
-                    statusHTML += ' <span class="text-red-500 text-sm ml-2">(كش ملك!)</span>';
-                }
-            }
+            if (game.in_checkmate()) {
+                statusHTML = 'كش مات! الفائز: ' + (moveColor === 'الأبيض' ? 'الأسود' : 'الأبيض');
+                $status.removeClass('text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-red-500');
+            } 
+            else if (game.in_draw()) {
+                statusHTML = 'وضع تعادل!';
+                $status.removeClass('text-red-500 text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-gray-500');
+            } 
+            else {
+                statusHTML = 'الدور على: ' + moveColor;
+                $status.removeClass('text-red-500 text-gray-500');
+                if(moveColor === 'الأبيض'){
+                    $status.removeClass('text-yellow-600 dark:text-yellow-400').addClass('text-blue-600 dark:text-blue-300');
+                } else {
+                    $status.removeClass('text-blue-600 dark:text-blue-300').addClass('text-yellow-600 dark:text-yellow-400');
+                }
+                
+                if (game.in_check()) {
+                    statusHTML += ' <span class="text-red-500 text-sm ml-2">(كش ملك!)</span>';
+                }
+            }
 
-            $status.html(statusHTML);
-            $fenOutput.val(game.fen());
+            $status.html(statusHTML);
+            $fenOutput.val(game.fen());
 
-            // تحديث راديو الدور يدوياً ليتناسب مع FEN
-            if (game.turn() === 'w') {
-                $('#turnWhite').prop('checked', true);
-            } else {
-                $('#turnBlack').prop('checked', true);
-            }
-        }
+            if (game.turn() === 'w') {
+                $('#turnWhite').prop('checked', true);
+            } else {
+                $('#turnBlack').prop('checked', true);
+            }
+        }
 
-        // إعدادات chessboard.js
-        var config = {
-            draggable: true,
-            position: 'start',
-            sparePieces: true,        // تفعيل القطع الاحتياطية للرص
-            dropOffBoard: 'trash',    // مسح القطعة عند رميها خارج الرقعة
-            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
-            onDragStart: onDragStart,
-            onDrop: onDrop,
-            onSnapEnd: onSnapEnd
-        };
-        
-        board = Chessboard('myBoard', config);
-        updateStatus();
+        var config = {
+            draggable: true,
+            position: 'start',
+            sparePieces: true,       
+            dropOffBoard: 'trash',   
+            pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd
+        };
+        
+        board = Chessboard('myBoard', config);
+        updateStatus();
 
-        // تبديل وضع النهار/الليل
-        $('#themeToggleBtn').on('click', function() {
-            var $html = $('html');
-            if ($html.hasClass('dark')) {
-                $html.removeClass('dark');
-                $(this).html('🌙 وضع الليل').removeClass('bg-indigo-600 hover:bg-indigo-500').addClass('bg-gray-800 hover:bg-gray-700');
-            } else {
-                $html.addClass('dark');
-                $(this).html('☀️ وضع النهار').removeClass('bg-gray-800 hover:bg-gray-700').addClass('bg-indigo-600 hover:bg-indigo-500');
-            }
-        });
+        $('#themeToggleBtn').on('click', function() {
+            var $html = $('html');
+            if ($html.hasClass('dark')) {
+                $html.removeClass('dark');
+                $(this).html('🌙 وضع الليل').removeClass('bg-indigo-600 hover:bg-indigo-500').addClass('bg-gray-800 hover:bg-gray-700');
+            } else {
+                $html.addClass('dark');
+                $(this).html('☀️ وضع النهار').removeClass('bg-gray-800 hover:bg-gray-700').addClass('bg-indigo-600 hover:bg-indigo-500');
+            }
+        });
 
-        // تغيير الدور يدوياً
-        $('input[name="turn"]').on('change', function() {
-            fenHistory.push(game.fen());
-            var newTurn = $(this).val();
-            var fenParts = game.fen().split(' ');
-            
-            if (fenParts[1] !== newTurn) {
-                fenParts[1] = newTurn;
-                // تصفير عدادات الحركات (لضمان عمل Stockfish)
-                fenParts[3] = '-'; // En Passant target square
-                fenParts[4] = '0'; // Halfmove clock
-                fenParts[5] = '1'; // Fullmove number
-                
-                game.load(fenParts.join(' '));
-                updateStatus();
-                removeHighlights(); 
-            }
-        });
+        $('input[name="turn"]').on('change', function() {
+            fenHistory.push(game.fen());
+            var newTurn = $(this).val();
+            var fenParts = game.fen().split(' ');
+            
+            if (fenParts[1] !== newTurn) {
+                fenParts[1] = newTurn;
+                fenParts[3] = '-'; 
+                game.load(fenParts.join(' '));
+                updateStatus();
+                removeHighlights(); 
+            }
+        });
 
-        // أزرار التحكم
-        $('#flipBtn').on('click', function() { board.flip(); });
+        $('#flipBtn').on('click', function() { board.flip(); });
 
-        $('#resetBtn').on('click', function() {
-            fenHistory.push(game.fen());
-            game.reset();
-            board.start();
-            updateStatus();
-            removeHighlights();
-        });
+        $('#resetBtn').on('click', function() {
+            fenHistory.push(game.fen());
+            game.reset();
+            board.start();
+            updateStatus();
+            removeHighlights();
+        });
 
-        $('#clearBtn').on('click', function() {
-            fenHistory.push(game.fen());
-            game.clear();
-            board.clear();
-            updateStatus();
-            removeHighlights();
-        });
+        $('#clearBtn').on('click', function() {
+            fenHistory.push(game.fen());
+            game.clear();
+            board.clear();
+            updateStatus();
+            removeHighlights();
+        });
 
-        $('#undoBtn').on('click', function() {
-            if (fenHistory.length > 0) {
-                var lastFen = fenHistory.pop(); 
-                game.load(lastFen);             
-                board.position(game.fen());     
-                updateStatus();
-                removeHighlights(); 
-            }
-        });
+        $('#undoBtn').on('click', function() {
+            if (fenHistory.length > 0) {
+                var lastFen = fenHistory.pop(); 
+                game.load(lastFen);             
+                board.position(game.fen());     
+                updateStatus();
+                removeHighlights(); 
+            }
+        });
 
-        // --- حساب أفضل حركة باستخدام Stockfish المحلي ---
-        $calcBtn.on('click', function() {
-            if (!engine) return;
+        $calcBtn.on('click', function() {
+            var currentFen = game.fen();
+            var originalText = '🎯 إحسب أفضل حركة';
+            
+            if (!currentFen.includes('K') || !currentFen.includes('k')) {
+                $calcBtn.html('⚠️ حط الملوك الأول!').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                setTimeout(function() {
+                    $calcBtn.html(originalText).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                }, 2500);
+                return;
+            }
 
-            var currentFen = game.fen();
-            var originalText = 'إحسب أفضل حركة';
-            var originalIcon = '🎯';
-            
-            // تحقق من وجود الملوك (شرط أساسي لعمل Stockfish)
-            if (!currentFen.includes('K') || !currentFen.includes('k')) {
-                $calcBtn.html('⚠️ حط الملوك الأول!').addClass('bg-red-600').removeClass('from-green-500 to-green-600');
-                setTimeout(function() {
-                    $calcBtn.html(originalIcon + ' ' + originalText).removeClass('bg-red-600').addClass('from-green-500 to-green-600');
-                }, 2500);
-                return;
-            }
+            $calcBtn.html('🤔 جاري التفكير بعمق...').addClass('loading').prop('disabled', true);
 
-            // تحديث واجهة الزرار لحالة التحميل
-            $calcText.html('جاري التحليل بعمق (Depth ' + depth + ')...');
-            $calcIcon.html('🤔');
-            $calcBtn.addClass('loading').prop('disabled', true);
+            var apiUrl = 'https://stockfish.online/api/s/v2.php?fen=' + encodeURIComponent(currentFen) + '&depth=15';
 
-            // إرسال كود FEN إلى المحرك
-            engine.postMessage('uci'); // التأكد من أن المحرك جاهز
-            engine.postMessage('ucinewgame');
-            engine.postMessage('position fen ' + currentFen);
-            engine.postMessage('go depth ' + depth);
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                success: function(response) {
+                    if(response.success) {
+                        fenHistory.push(game.fen()); 
+                        var bestMoveString = response.bestmove.split(' ')[1]; 
+                        
+                        var fromSq = bestMoveString.substring(0, 2);
+                        var toSq = bestMoveString.substring(2, 4);
+                        
+                        var theMove = game.move(bestMoveString, { sloppy: true });
+                        var isCapture = (theMove && theMove.captured != null);
+                        
+                        board.position(game.fen());
+                        updateStatus();
 
-            // التعامل مع رد المحرك
-            engine.onmessage = function(event) {
-                var line = event.data;
-                
-                // البحث عن السطر الذي يحتوي على أفضل حركة (bestmove)
-                if (line.includes('bestmove')) {
-                    var bestMoveString = line.split(' ')[1];
-                    
-                    if (bestMoveString && bestMoveString !== '(none)') {
-                        // تسجيل FEN قبل الحركة
-                        fenHistory.push(game.fen());
-
-                        // تقسيم الحركة إلى مصدر وهدف (مثلاً e2e4)
-                        var fromSq = bestMoveString.substring(0, 2);
-                        var toSq = bestMoveString.substring(2, 4);
-                        var promotion = bestMoveString.substring(4, 5); // للترقية
-                        
-                        // تنفيذ الحركة في chess.js
-                        var theMove = game.move({ from: fromSq, to: toSq, promotion: promotion || 'q' }, { sloppy: true });
-                        
-                        // تحديث واجهة الرقعة والحالة
-                        board.position(game.fen());
-                        updateStatus();
-                        highlightMove(fromSq, toSq);
-                        playMoveSound(theMove && theMove.captured != null);
-                        
-                        // استعادة واجهة الزرار
-                        $calcText.html(originalText);
-                        $calcIcon.html(originalIcon);
-                        $calcBtn.removeClass('loading').prop('disabled', false);
-                    } else {
-                        // لم يتم العثور على حركة (مثلاً مات أو تعادل)
-                        $calcBtn.html('⚠️ مفيش حركات قانونية').removeClass('loading').addClass('bg-yellow-600').removeClass('from-green-500 to-green-600');
-                        setTimeout(function() { 
-                            $calcBtn.html(originalIcon + ' ' + originalText).prop('disabled', false).removeClass('bg-yellow-600').addClass('from-green-500 to-green-600'); 
-                            $calcText.html(originalText);
-                            $calcIcon.html(originalIcon);
-                        }, 2500);
-                    }
-                }
-            };
-        });
-        // ----------------------------------------------------
-    </script>
+                        highlightMove(fromSq, toSq);
+                        playMoveSound(isCapture);
+                        
+                        $calcBtn.html(originalText).removeClass('loading').prop('disabled', false);
+                    } else {
+                        $calcBtn.html('⚠️ رصة غير قانونية').removeClass('loading').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                        setTimeout(function() { 
+                            $calcBtn.html(originalText).prop('disabled', false).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'); 
+                        }, 2500);
+                    }
+                },
+                error: function() {
+                    $calcBtn.html('❌ السيرفر مشغول حالياً').removeClass('loading').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                    setTimeout(function() { 
+                        $calcBtn.html(originalText).prop('disabled', false).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'); 
+                    }, 2500);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
