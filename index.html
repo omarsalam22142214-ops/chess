@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شطرنج احترافي - وضع الرص الحر</title>
+    <title>شطرنج احترافي - اللعب ضد الكمبيوتر</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -26,12 +26,10 @@
         }
         .spare-pieces-7492f { margin: 15px 0; display: flex; justify-content: center; gap: 10px; }
         
-        /* التحديد باللون الأصفر */
         .highlight-move {
             box-shadow: inset 0 0 0 100px rgba(255, 255, 51, 0.5) !important;
         }
         
-        /* خط التايمر الديجيتال */
         .digital-font { font-family: 'Courier New', Courier, monospace; }
     </style>
 </head>
@@ -42,7 +40,7 @@
         <div class="mb-8 border-b border-gray-300 dark:border-gray-600 pb-4 flex justify-between items-center">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-2">شطرنج احترافي + وضع حر</h1>
-                <p class="text-gray-600 dark:text-gray-400">إسحب القطع من برة، إرمي القطع لبرة، وارجع في كلامك براحتك!</p>
+                <p class="text-gray-600 dark:text-gray-400">العب ضد أقوى محرك شطرنج، أو جرب الرص الحر براحتك.</p>
             </div>
             <button id="themeToggleBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-4 rounded shadow-lg transition">
                 ☀️ وضع النهار
@@ -63,26 +61,31 @@
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">
                         <h2 class="text-xl font-bold text-gray-800 dark:text-white">حالة اللعبة</h2>
-                        <!-- شاشة التايمر -->
                         <div id="timerDisplay" class="digital-font text-2xl font-bold text-gray-900 dark:text-green-400 bg-gray-200 dark:bg-gray-900 px-3 py-1 rounded shadow-inner tracking-widest">00:00</div>
                     </div>
                     <div id="status" class="text-lg font-semibold text-blue-600 dark:text-blue-300">الدور على: الأبيض</div>
                 </div>
 
+                <!-- صندوق نظام اللعب الجديد -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
-                    <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">الدور على مين؟</h2>
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">بتلعب بمين؟ (نظام اللعب)</h2>
                     <div class="flex flex-col gap-3">
                         <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="turn" value="w" id="turnWhite" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" checked>
-                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">الأبيض (White)</span>
+                            <input type="radio" name="playMode" value="free" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500" checked>
+                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">لعب حر (إنت بتلعب باللونين)</span>
                         </label>
                         <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="turn" value="b" id="turnBlack" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500">
-                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">الأسود (Black)</span>
+                            <input type="radio" name="playMode" value="white" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500">
+                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">أنا الأبيض ⚪ (الكمبيوتر هيرد)</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="playMode" value="black" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500">
+                            <span class="mr-3 text-gray-700 dark:text-gray-200 font-medium">أنا الأسود ⚫ (الكمبيوتر هيبدأ)</span>
                         </label>
                     </div>
                 </div>
 
+                <!-- صندوق التحكم والمحرك -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <button id="calculateBtn" class="w-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 hover:opacity-90 text-white py-3 px-4 rounded border border-green-600 dark:border-green-500 transition font-bold text-lg mb-4 shadow-md">
                         🎯 إحسب أفضل حركة
@@ -98,6 +101,7 @@
                     </div>
                 </div>
 
+                <!-- صندوق الـ FEN -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <h2 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">كود الرصة (FEN)</h2>
                     <input type="text" id="fenOutput" readonly class="w-full bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded p-2 text-xs text-left focus:outline-none" dir="ltr">
@@ -118,6 +122,7 @@
         var $fenOutput = $('#fenOutput');
         var $calcBtn = $('#calculateBtn');
         var fenHistory = [];
+        var isCalculating = false;
 
         // --- نظام التايمر ---
         var timerSeconds = 0;
@@ -187,14 +192,25 @@
             }
         }
 
-        function onDragStart (source, piece, position, orientation) {}
+        // منع اللاعب إنه يحرك قطع الكمبيوتر
+        function onDragStart (source, piece, position, orientation) {
+            if (game.game_over()) return false;
+
+            var mode = $('input[name="playMode"]:checked').val();
+            
+            // لو بتلعب بأبيض والكمبيوتر عليه الدور، متتحركش
+            if (mode === 'white' && game.turn() === 'b') return false;
+            if (mode === 'black' && game.turn() === 'w') return false;
+
+            // متسمحش بمسك قطع الكمبيوتر
+            if (mode === 'white' && piece.search(/^b/) !== -1) return false;
+            if (mode === 'black' && piece.search(/^w/) !== -1) return false;
+        }
 
         function onDrop (source, target, piece, newPos, oldPos, orientation) {
             if (source === target) return 'snapback';
             
-            // تشغيل التايمر مع أول حركة
             startTimer();
-
             fenHistory.push(game.fen());
 
             var isCapture = false;
@@ -225,6 +241,13 @@
             updateStatus();
             highlightMove(source, target);
             playMoveSound(isCapture);
+
+            // الرد التلقائي من الكمبيوتر
+            var mode = $('input[name="playMode"]:checked').val();
+            if ((mode === 'white' && game.turn() === 'b' && !game.game_over()) || 
+                (mode === 'black' && game.turn() === 'w' && !game.game_over())) {
+                setTimeout(makeComputerMove, 400); // 400 مللي ثانية عشان تبان واقعية
+            }
         }
 
         function onSnapEnd () {
@@ -238,12 +261,12 @@
             if (game.in_checkmate()) {
                 statusHTML = 'كش مات! الفائز: ' + (moveColor === 'الأبيض' ? 'الأسود' : 'الأبيض');
                 $status.removeClass('text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-red-500');
-                stopTimer(); // إيقاف التايمر عند الكش مات
+                stopTimer();
             } 
             else if (game.in_draw()) {
                 statusHTML = 'وضع تعادل!';
                 $status.removeClass('text-red-500 text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-gray-500');
-                stopTimer(); // إيقاف التايمر في حالة التعادل
+                stopTimer();
             } 
             else {
                 statusHTML = 'الدور على: ' + moveColor;
@@ -261,12 +284,6 @@
 
             $status.html(statusHTML);
             $fenOutput.val(game.fen());
-
-            if (game.turn() === 'w') {
-                $('#turnWhite').prop('checked', true);
-            } else {
-                $('#turnBlack').prop('checked', true);
-            }
         }
 
         var config = {
@@ -283,6 +300,8 @@
         board = Chessboard('myBoard', config);
         updateStatus();
 
+        // ------------------ التفاعلات والأزرار ------------------
+
         $('#themeToggleBtn').on('click', function() {
             var $html = $('html');
             if ($html.hasClass('dark')) {
@@ -294,17 +313,16 @@
             }
         });
 
-        $('input[name="turn"]').on('change', function() {
-            fenHistory.push(game.fen());
-            var newTurn = $(this).val();
-            var fenParts = game.fen().split(' ');
+        // تغيير نظام اللعب
+        $('input[name="playMode"]').on('change', function() {
+            var mode = $(this).val();
             
-            if (fenParts[1] !== newTurn) {
-                fenParts[1] = newTurn;
-                fenParts[3] = '-'; 
-                game.load(fenParts.join(' '));
-                updateStatus();
-                removeHighlights(); 
+            if (mode === 'white') {
+                board.orientation('white');
+                if (game.turn() === 'b') makeComputerMove();
+            } else if (mode === 'black') {
+                board.orientation('black');
+                if (game.turn() === 'w') makeComputerMove();
             }
         });
 
@@ -316,7 +334,11 @@
             board.start();
             updateStatus();
             removeHighlights();
-            resetTimer(); // تصفير التايمر مع الريستارت
+            resetTimer();
+            
+            // لو اليوزر مختار يلعب بالأسود وعمل ريستارت، الكمبيوتر هيبدأ الأول
+            var mode = $('input[name="playMode"]:checked').val();
+            if (mode === 'black') makeComputerMove();
         });
 
         $('#clearBtn').on('click', function() {
@@ -325,25 +347,48 @@
             board.clear();
             updateStatus();
             removeHighlights();
-            resetTimer(); // تصفير التايمر مع المسح
+            resetTimer();
         });
 
+        // زرار التراجع متبرمج يرجع خطوتين لو بتلعب ضد الكمبيوتر
         $('#undoBtn').on('click', function() {
-            if (fenHistory.length > 0) {
-                var lastFen = fenHistory.pop(); 
-                game.load(lastFen);             
-                board.position(game.fen());     
-                updateStatus();
-                removeHighlights(); 
-                
-                // لو رجعنا في كلامنا بعد الكش مات، نشغل التايمر تاني
-                if (!game.game_over() && timerSeconds > 0) {
-                    startTimer();
+            var mode = $('input[name="playMode"]:checked').val();
+
+            if (mode !== 'free') {
+                // تراجع مرتين عشان ترجع لدورك
+                if (fenHistory.length >= 2) {
+                    fenHistory.pop(); // ارمي حركة الكمبيوتر
+                    var lastHumanFen = fenHistory.pop(); // هات حركتك القديمة
+                    game.load(lastHumanFen);             
+                    board.position(game.fen());     
+                    updateStatus();
+                    removeHighlights();
+                } else if (fenHistory.length === 1) {
+                    game.load(fenHistory.pop());             
+                    board.position(game.fen());     
+                    updateStatus();
+                    removeHighlights();
                 }
+            } else {
+                // تراجع مرة واحدة في اللعب الحر
+                if (fenHistory.length > 0) {
+                    var lastFen = fenHistory.pop(); 
+                    game.load(lastFen);             
+                    board.position(game.fen());     
+                    updateStatus();
+                    removeHighlights(); 
+                }
+            }
+
+            if (!game.game_over() && timerSeconds > 0) {
+                startTimer();
             }
         });
 
-        $calcBtn.on('click', function() {
+        // دالة حركة الكمبيوتر الأساسية
+        function makeComputerMove() {
+            if (isCalculating || game.game_over()) return;
+            
             var currentFen = game.fen();
             var originalText = '🎯 إحسب أفضل حركة';
             
@@ -355,10 +400,9 @@
                 return;
             }
 
-            // تشغيل التايمر لو دي أول حركة تتعمل في الجيم عن طريق المحرك
             startTimer();
-
-            $calcBtn.html('🤔 جاري التفكير بعمق...').addClass('loading').prop('disabled', true);
+            isCalculating = true;
+            $calcBtn.html('🤔 الكمبيوتر بيفكر...').addClass('loading').prop('disabled', true);
 
             var apiUrl = 'https://stockfish.online/api/s/v2.php?fen=' + encodeURIComponent(currentFen) + '&depth=15';
 
@@ -389,15 +433,20 @@
                             $calcBtn.html(originalText).prop('disabled', false).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'); 
                         }, 2500);
                     }
+                    isCalculating = false;
                 },
                 error: function() {
                     $calcBtn.html('❌ السيرفر مشغول حالياً').removeClass('loading').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
                     setTimeout(function() { 
                         $calcBtn.html(originalText).prop('disabled', false).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'); 
                     }, 2500);
+                    isCalculating = false;
                 }
             });
-        });
+        }
+
+        // تشغيل المحرك يدوياً من الزرار
+        $calcBtn.on('click', makeComputerMove);
     </script>
 </body>
 </html>
