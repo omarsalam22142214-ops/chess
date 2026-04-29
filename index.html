@@ -11,7 +11,6 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .board-shadow { box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
-        /* أنيميشن خفيف لزرار التحميل */
         .loading { animation: pulse 1.5s infinite; }
         @keyframes pulse {
             0% { opacity: 1; }
@@ -39,15 +38,31 @@
             <!-- لوحة التحكم الاحترافية -->
             <div class="w-full lg:w-1/3 flex flex-col gap-6">
                 
+                <!-- صندوق حالة اللعبة -->
                 <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
                     <h2 class="text-xl font-bold text-white mb-4 border-b border-gray-500 pb-2">حالة اللعبة</h2>
                     <div id="status" class="text-lg font-semibold text-blue-300">الدور على: الأبيض</div>
                 </div>
 
+                <!-- صندوق تحديد الدور (Active Color) -->
+                <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
+                    <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-500 pb-2">الدور على مين (Active Color)</h2>
+                    <div class="flex flex-col gap-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="turn" value="w" id="turnWhite" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2" checked>
+                            <span class="mr-3 text-gray-200 font-medium">الأبيض (White to move)</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="turn" value="b" id="turnBlack" class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 focus:ring-2">
+                            <span class="mr-3 text-gray-200 font-medium">الأسود (Black to move)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- صندوق التحكم والمحرك -->
                 <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
                     <h2 class="text-lg font-bold text-white mb-4 border-b border-gray-500 pb-2">الكمبيوتر (المحرك)</h2>
                     
-                    <!-- الزرار السحري اللي بيجيب أحسن حركة -->
                     <button id="calculateBtn" class="w-full bg-gradient-to-b from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white py-3 px-4 rounded border border-green-500 transition font-bold text-lg mb-4 shadow-lg">
                         🎯 إحسب أفضل حركة (Stockfish)
                     </button>
@@ -59,6 +74,7 @@
                     </div>
                 </div>
 
+                <!-- صندوق الـ FEN -->
                 <div class="bg-gray-700 p-5 rounded-lg border border-gray-600 shadow-md">
                     <h2 class="text-sm font-bold text-gray-300 mb-2">كود الرصة (FEN)</h2>
                     <input type="text" id="fenOutput" readonly class="w-full bg-gray-900 text-gray-400 border border-gray-600 rounded p-2 text-xs text-left focus:outline-none" dir="ltr">
@@ -82,7 +98,6 @@
 
         function onDragStart (source, piece, position, orientation) {
             if (game.game_over()) return false;
-            // شيلنا شرط منع تحريك قطع الخصم عشان تقدر تلعب براحتك لوحدك أو مع صاحبك
         }
 
         function onDrop (source, target) {
@@ -128,6 +143,13 @@
 
             $status.html(statusHTML);
             $fenOutput.val(game.fen());
+
+            // تحديث زراير اختيار الدور تلقائياً مع اللعب
+            if (game.turn() === 'w') {
+                $('#turnWhite').prop('checked', true);
+            } else {
+                $('#turnBlack').prop('checked', true);
+            }
         }
 
         var config = {
@@ -141,6 +163,22 @@
         
         board = Chessboard('myBoard', config);
         updateStatus();
+
+        // ------ الأزرار والتفاعلات ------
+
+        // لما اليوزر يغير الدور بإيده من الـ Radio Buttons
+        $('input[name="turn"]').on('change', function() {
+            var newTurn = $(this).val();
+            var fenParts = game.fen().split(' ');
+            
+            if (fenParts[1] !== newTurn) {
+                fenParts[1] = newTurn;
+                // بنصفر خانة الأكل بالتجاوز (En passant) عشان ميعملش إيرور في الرصة لما نغير الدور بالعافية
+                fenParts[3] = '-'; 
+                game.load(fenParts.join(' '));
+                updateStatus();
+            }
+        });
 
         // زرار لف اللوحة
         $('#flipBtn').on('click', function() { board.flip(); });
@@ -166,24 +204,18 @@
                 return;
             }
 
-            // نغير شكل الزرار عشان يبان إنه بيفكر
             var originalText = $calcBtn.html();
             $calcBtn.html('🤔 جاري التفكير وطلب المساعدة...').addClass('loading').prop('disabled', true);
 
             var currentFen = game.fen();
             var apiUrl = 'https://stockfish.online/api/s/v2.php?fen=' + encodeURIComponent(currentFen) + '&depth=14';
 
-            // طلب الحركة من السيرفر المجاني
             $.ajax({
                 url: apiUrl,
                 method: 'GET',
                 success: function(response) {
                     if(response.success) {
-                        // السيرفر بيرجع الحركة بالشكل ده: "bestmove e2e4 ponder e7e5"
-                        // إحنا بناخد الجزء التاني (e2e4)
                         var bestMoveString = response.bestmove.split(' ')[1]; 
-                        
-                        // بنخلي مكتبة الشطرنج تلعب الحركة دي
                         game.move(bestMoveString, { sloppy: true });
                         board.position(game.fen());
                         updateStatus();
@@ -195,7 +227,6 @@
                     alert('مش قادر أوصل للسيرفر، اتأكد من النت عندك.');
                 },
                 complete: function() {
-                    // نرجع الزرار لأصله
                     $calcBtn.html(originalText).removeClass('loading').prop('disabled', false);
                 }
             });
