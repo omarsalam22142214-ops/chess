@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>شطرنج احترافي - وضع الرص الحر</title>
     
-    <!-- مكتبة التصميم -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- عشان نفعل الـ Dark Mode يدوياً بالـ Class -->
     <script>
         tailwind.config = {
             darkMode: 'class',
         }
     </script>
     
-    <!-- مكتبة شكل اللوحة -->
     <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
     
     <style>
@@ -27,15 +24,17 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        /* تظبيط شكل القطع اللي برة اللوحة */
         .spare-pieces-7492f { margin: 10px 0; display: flex; justify-content: center; }
+        
+        .highlight-move {
+            box-shadow: inset 0 0 0 100px rgba(255, 255, 51, 0.5) !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-200 min-h-screen p-6 md:p-12">
 
     <div class="max-w-6xl mx-auto">
         
-        <!-- الهيدر وفيه زرار الـ Dark Mode -->
         <div class="mb-8 border-b border-gray-300 dark:border-gray-600 pb-4 flex justify-between items-center">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-50 mb-2">شطرنج احترافي + وضع حر</h1>
@@ -48,24 +47,19 @@
 
         <div class="flex flex-col lg:flex-row gap-10">
             
-            <!-- اللوحة والقطع اللي برة -->
             <div class="w-full lg:w-2/3 flex justify-center lg:justify-start">
                 <div class="w-full max-w-[500px]">
-                    <!-- اللوحة نفسها (مكتبة chessboard هتحط القطع اللي برة فوقها وتحتها تلقائياً) -->
                     <div id="myBoard" class="w-full board-shadow border-4 border-gray-400 dark:border-gray-700 rounded-sm bg-gray-300"></div>
                 </div>
             </div>
 
-            <!-- لوحة التحكم -->
             <div class="w-full lg:w-1/3 flex flex-col gap-5">
                 
-                <!-- صندوق حالة اللعبة -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">حالة اللعبة</h2>
                     <div id="status" class="text-lg font-semibold text-blue-600 dark:text-blue-300">الدور على: الأبيض</div>
                 </div>
 
-                <!-- صندوق تحديد الدور -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <h2 class="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">الدور على مين؟</h2>
                     <div class="flex flex-col gap-3">
@@ -80,13 +74,11 @@
                     </div>
                 </div>
 
-                <!-- صندوق التحكم والمحرك -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <button id="calculateBtn" class="w-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-600 dark:to-green-700 hover:opacity-90 text-white py-3 px-4 rounded border border-green-600 dark:border-green-500 transition font-bold text-lg mb-4 shadow-md">
                         🎯 إحسب أفضل حركة
                     </button>
 
-                    <!-- زراير التحكم الأساسية -->
                     <div class="grid grid-cols-2 gap-2 mb-2">
                         <button id="undoBtn" class="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-2 px-2 rounded border border-yellow-600 shadow-sm transition">↩️ تراجع خطوة</button>
                         <button id="flipBtn" class="bg-gray-500 hover:bg-gray-400 text-white font-bold py-2 px-2 rounded border border-gray-600 shadow-sm transition">🔄 لف اللوحة</button>
@@ -97,7 +89,6 @@
                     </div>
                 </div>
 
-                <!-- صندوق الـ FEN -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
                     <h2 class="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">كود الرصة (FEN)</h2>
                     <input type="text" id="fenOutput" readonly class="w-full bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded p-2 text-xs text-left focus:outline-none" dir="ltr">
@@ -107,7 +98,6 @@
         </div>
     </div>
 
-    <!-- المكتبات -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
@@ -119,33 +109,37 @@
         var $fenOutput = $('#fenOutput');
         var $calcBtn = $('#calculateBtn');
         
-        // ذاكرة لتسجيل كل خطوة عشان نقدر نرجع فيها
         var fenHistory = [];
 
-        function onDragStart (source, piece, position, orientation) {
-            // اللعب مفتوح بحرية تامة
+        function removeHighlights() {
+            $('#myBoard .square-5c8f2').removeClass('highlight-move');
         }
 
-        // دالة الرمي الجديدة اللي بتدعم سحب القطع من برة أو رميها لبرة
+        function highlightMove(source, target) {
+            removeHighlights();
+            if (source && source !== 'spare' && source !== 'offboard') {
+                $('#myBoard .square-' + source).addClass('highlight-move');
+            }
+            if (target && target !== 'offboard') {
+                $('#myBoard .square-' + target).addClass('highlight-move');
+            }
+        }
+
+        function onDragStart (source, piece, position, orientation) {}
+
         function onDrop (source, target, piece, newPos, oldPos, orientation) {
-            // لو القطعة رجعت مكانها بالظبط مفيش داعي نسجل خطوة
             if (source === target) return 'snapback';
 
-            // 1. نسجل وضع اللوحة الحالي قبل التغيير عشان زرار "التراجع"
             fenHistory.push(game.fen());
 
-            // 2. لو القطعة مسحوبة من برة اللوحة (Spare)
             if (source === 'spare') {
                 game.put({ type: piece[1].toLowerCase(), color: piece[0] }, target);
             } 
-            // 3. لو القطعة اترمت برة اللوحة عشان تتمسح
             else if (target === 'offboard') {
                 game.remove(source);
             } 
-            // 4. لو حركة جوه اللوحة
             else {
                 var move = game.move({ from: source, to: target, promotion: 'q' });
-                // لو حركة مش قانونية، هننفذها بالعافية (Sandbox)
                 if (move === null) {
                     game.remove(source);
                     game.put({ type: piece[1].toLowerCase(), color: piece[0] }, target);
@@ -153,6 +147,7 @@
             }
 
             updateStatus();
+            highlightMove(source, target);
         }
 
         function onSnapEnd () {
@@ -188,7 +183,6 @@
             $status.html(statusHTML);
             $fenOutput.val(game.fen());
 
-            // تحديد دور مين من الزراير
             if (game.turn() === 'w') {
                 $('#turnWhite').prop('checked', true);
             } else {
@@ -196,12 +190,11 @@
             }
         }
 
-        // إعدادات اللوحة السحرية الجديدة
         var config = {
             draggable: true,
             position: 'start',
-            sparePieces: true,       // دي اللي بتظهر القطع الإضافية برة اللوحة!
-            dropOffBoard: 'trash',   // دي اللي بتخليك تقدر تمسح القطعة لو رميتها برة اللوحة!
+            sparePieces: true,       
+            dropOffBoard: 'trash',   
             pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
             onDragStart: onDragStart,
             onDrop: onDrop,
@@ -211,9 +204,6 @@
         board = Chessboard('myBoard', config);
         updateStatus();
 
-        // ------------------ التفاعلات والأزرار ------------------
-
-        // زرار الدارك مود / اللايت مود
         $('#themeToggleBtn').on('click', function() {
             var $html = $('html');
             if ($html.hasClass('dark')) {
@@ -225,9 +215,8 @@
             }
         });
 
-        // تغيير الدور يدوي
         $('input[name="turn"]').on('change', function() {
-            fenHistory.push(game.fen()); // نسجل خطوة قبل تغيير الدور
+            fenHistory.push(game.fen());
             var newTurn = $(this).val();
             var fenParts = game.fen().split(' ');
             
@@ -236,6 +225,7 @@
                 fenParts[3] = '-'; 
                 game.load(fenParts.join(' '));
                 updateStatus();
+                removeHighlights(); 
             }
         });
 
@@ -246,6 +236,7 @@
             game.reset();
             board.start();
             updateStatus();
+            removeHighlights();
         });
 
         $('#clearBtn').on('click', function() {
@@ -253,24 +244,36 @@
             game.clear();
             board.clear();
             updateStatus();
+            removeHighlights();
         });
 
-        // زرار التراجع السوبر (يرجع أي حركة أو مسح أو إضافة)
         $('#undoBtn').on('click', function() {
             if (fenHistory.length > 0) {
-                var lastFen = fenHistory.pop(); // نطلع آخر لقطة من الذاكرة
-                game.load(lastFen);             // نحملها في مخ اللعبة
-                board.position(game.fen());     // نرسمها على اللوحة
+                var lastFen = fenHistory.pop(); 
+                game.load(lastFen);             
+                board.position(game.fen());     
                 updateStatus();
+                removeHighlights(); 
             }
         });
 
-        // محرك الذكاء الاصطناعي
+        // الكود المتعدل بدون أي Alerts مزعجة
         $calcBtn.on('click', function() {
-            var originalText = $calcBtn.html();
-            $calcBtn.html('🤔 جاري التفكير...').addClass('loading').prop('disabled', true);
-
             var currentFen = game.fen();
+            var originalText = '🎯 إحسب أفضل حركة';
+            
+            // فحص وجود الملوك
+            if (!currentFen.includes('K') || !currentFen.includes('k')) {
+                // إظهار رسالة الخطأ على الزرار نفسه بدل الـ Alert
+                $calcBtn.html('⚠️ حط الملوك الأول!').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                setTimeout(function() {
+                    $calcBtn.html(originalText).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                }, 2500);
+                return;
+            }
+
+            $calcBtn.html('🤔 جاري التفكير بعمق...').addClass('loading').prop('disabled', true);
+
             var apiUrl = 'https://stockfish.online/api/s/v2.php?fen=' + encodeURIComponent(currentFen) + '&depth=15';
 
             $.ajax({
@@ -278,20 +281,31 @@
                 method: 'GET',
                 success: function(response) {
                     if(response.success) {
-                        fenHistory.push(game.fen()); // نسجل اللوحة قبل حركة الكمبيوتر عشان لو حبيت تتراجع
+                        fenHistory.push(game.fen()); 
                         var bestMoveString = response.bestmove.split(' ')[1]; 
                         game.move(bestMoveString, { sloppy: true });
                         board.position(game.fen());
                         updateStatus();
+
+                        var fromSq = bestMoveString.substring(0, 2);
+                        var toSq = bestMoveString.substring(2, 4);
+                        highlightMove(fromSq, toSq);
+                        
+                        $calcBtn.html(originalText).removeClass('loading').prop('disabled', false);
                     } else {
-                        alert('في مشكلة في الرصة دي، المحرك مش قادر يحللها!');
+                        // لو الرصة غلط، هيتكتب على الزرار لمدة ثانيتين ويرجع
+                        $calcBtn.html('⚠️ رصة غير قانونية').removeClass('loading').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                        setTimeout(function() { 
+                            $calcBtn.html(originalText).prop('disabled', false).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'); 
+                        }, 2500);
                     }
                 },
                 error: function() {
-                    alert('النت فصل أو السيرفر مشغول، جرب تاني.');
-                },
-                complete: function() {
-                    $calcBtn.html(originalText).removeClass('loading').prop('disabled', false);
+                    // لو السيرفر فصل، هيتكتب على الزرار لمدة ثانيتين ويرجع
+                    $calcBtn.html('❌ السيرفر مشغول حالياً').removeClass('loading').addClass('bg-red-600').removeClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700');
+                    setTimeout(function() { 
+                        $calcBtn.html(originalText).prop('disabled', false).removeClass('bg-red-600').addClass('from-green-500 to-green-600 dark:from-green-600 dark:to-green-700'); 
+                    }, 2500);
                 }
             });
         });
