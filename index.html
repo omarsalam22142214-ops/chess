@@ -30,6 +30,9 @@
         .highlight-move {
             box-shadow: inset 0 0 0 100px rgba(255, 255, 51, 0.5) !important;
         }
+        
+        /* خط التايمر الديجيتال */
+        .digital-font { font-family: 'Courier New', Courier, monospace; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-200 min-h-screen p-6 md:p-12">
@@ -56,8 +59,13 @@
 
             <div class="w-full lg:w-1/3 flex flex-col gap-5">
                 
+                <!-- صندوق حالة اللعبة والتايمر -->
                 <div class="bg-white dark:bg-gray-700 p-5 rounded-lg border border-gray-300 dark:border-gray-600 shadow-md">
-                    <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">حالة اللعبة</h2>
+                    <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-500 pb-2">
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-white">حالة اللعبة</h2>
+                        <!-- شاشة التايمر -->
+                        <div id="timerDisplay" class="digital-font text-2xl font-bold text-gray-900 dark:text-green-400 bg-gray-200 dark:bg-gray-900 px-3 py-1 rounded shadow-inner tracking-widest">00:00</div>
+                    </div>
                     <div id="status" class="text-lg font-semibold text-blue-600 dark:text-blue-300">الدور على: الأبيض</div>
                 </div>
 
@@ -109,8 +117,42 @@
         var $status = $('#status');
         var $fenOutput = $('#fenOutput');
         var $calcBtn = $('#calculateBtn');
-        
         var fenHistory = [];
+
+        // --- نظام التايمر ---
+        var timerSeconds = 0;
+        var timerInterval = null;
+        var isTimerRunning = false;
+
+        function formatTime(sec) {
+            var m = Math.floor(sec / 60).toString().padStart(2, '0');
+            var s = (sec % 60).toString().padStart(2, '0');
+            return m + ':' + s;
+        }
+
+        function startTimer() {
+            if (!isTimerRunning) {
+                isTimerRunning = true;
+                timerInterval = setInterval(function() {
+                    timerSeconds++;
+                    $('#timerDisplay').text(formatTime(timerSeconds));
+                }, 1000);
+            }
+        }
+
+        function stopTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            timerSeconds = 0;
+            $('#timerDisplay').text('00:00');
+        }
+        // ------------------------
 
         // --- المؤثرات الصوتية ---
         var moveSound = new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3');
@@ -129,11 +171,9 @@
                 moveSound.play().catch(function(){});
             }
         }
-        // ------------------------
 
-        // --- دوال الهايلايت (التعديل الجذري عشان ميعلقش) ---
+        // --- دوال الهايلايت ---
         function removeHighlights() {
-            // بنمسح التحديد باستخدام الكلاس نفسه عشان نضمن إنه يتمسح تماماً
             $('.highlight-move').removeClass('highlight-move');
         }
 
@@ -146,12 +186,14 @@
                 $('#myBoard .square-' + target).addClass('highlight-move');
             }
         }
-        // ------------------------
 
         function onDragStart (source, piece, position, orientation) {}
 
         function onDrop (source, target, piece, newPos, oldPos, orientation) {
             if (source === target) return 'snapback';
+            
+            // تشغيل التايمر مع أول حركة
+            startTimer();
 
             fenHistory.push(game.fen());
 
@@ -165,17 +207,14 @@
                 game.remove(source);
             } 
             else {
-                // بنحاول نعمل الحركة قانونياً الأول عشان نعرف لو فيها أكل (حتى لو أكل بالتجاوز)
                 var tempMove = game.move({ from: source, to: target, promotion: 'q' });
-                
                 if (tempMove !== null) {
                     isCapture = tempMove.captured != null;
-                    game.undo(); // نرجعها عشان نطبقها تحت تاني أو نطبقها بالعافية
+                    game.undo(); 
                 } else {
                     isCapture = game.get(target) !== null;
                 }
 
-                // تنفيذ الحركة
                 var move = game.move({ from: source, to: target, promotion: 'q' });
                 if (move === null) {
                     game.remove(source);
@@ -199,10 +238,12 @@
             if (game.in_checkmate()) {
                 statusHTML = 'كش مات! الفائز: ' + (moveColor === 'الأبيض' ? 'الأسود' : 'الأبيض');
                 $status.removeClass('text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-red-500');
+                stopTimer(); // إيقاف التايمر عند الكش مات
             } 
             else if (game.in_draw()) {
                 statusHTML = 'وضع تعادل!';
                 $status.removeClass('text-red-500 text-blue-600 dark:text-blue-300 text-yellow-600 dark:text-yellow-400').addClass('text-gray-500');
+                stopTimer(); // إيقاف التايمر في حالة التعادل
             } 
             else {
                 statusHTML = 'الدور على: ' + moveColor;
@@ -275,6 +316,7 @@
             board.start();
             updateStatus();
             removeHighlights();
+            resetTimer(); // تصفير التايمر مع الريستارت
         });
 
         $('#clearBtn').on('click', function() {
@@ -283,6 +325,7 @@
             board.clear();
             updateStatus();
             removeHighlights();
+            resetTimer(); // تصفير التايمر مع المسح
         });
 
         $('#undoBtn').on('click', function() {
@@ -292,6 +335,11 @@
                 board.position(game.fen());     
                 updateStatus();
                 removeHighlights(); 
+                
+                // لو رجعنا في كلامنا بعد الكش مات، نشغل التايمر تاني
+                if (!game.game_over() && timerSeconds > 0) {
+                    startTimer();
+                }
             }
         });
 
@@ -306,6 +354,9 @@
                 }, 2500);
                 return;
             }
+
+            // تشغيل التايمر لو دي أول حركة تتعمل في الجيم عن طريق المحرك
+            startTimer();
 
             $calcBtn.html('🤔 جاري التفكير بعمق...').addClass('loading').prop('disabled', true);
 
